@@ -1,0 +1,21 @@
+{
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "file": "nids.log",
+        "console": true
+    },
+    "capture": {
+        "interface": null,
+        "filter": "tcp or udp",
+        "timeout": 0,
+        "count": 0
+    },
+    "features": {
+        "enabled": ["basic"],
+        "save_path": "features.csv"
+    },
+    "system": {
+        "stats_interval": 5
+    }
+} 
