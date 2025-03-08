@@ -1,4 +1,50 @@
- # Core dependencies
-scapy>=2.6.0         # For packet capture and analysis
-numpy>=1.26.4        # For numerical operations and statistics
-pandas>=2.2.2        # For data manipulation and analysis
+# Network Intrusion Detection System Dependencies
+
+# Core packet capture and network analysis
+scapy>=2.5.0       # For packet capture, analysis, and network interaction
+pcap-ct>=1.3.0b3  # Python wrapper for the pcap library
+dpkt>=1.9.8        # Fast, simple packet creation and parsing
+
+# Data processing and analysis
+numpy>=1.24.0      # Numerical operations and array processing
+pandas>=2.0.0      # Data manipulation and analysis
+scipy>=1.10.0      # Scientific computing tools for statistical analysis
+
+# Machine learning components (for anomaly detection)
+scikit-learn>=1.2.0  # Machine learning algorithms for anomaly detection
+joblib>=1.2.0      # Parallel computing and model persistence
+
+# Visualization
+matplotlib>=3.7.0  # Visualization and plotting capabilities
+seaborn>=0.12.0    # Enhanced visualization library built on matplotlib
+
+# System monitoring and performance
+psutil>=5.9.0      # System utilization monitoring (CPU, memory, network)
+py-cpuinfo>=9.0.0  # For obtaining detailed CPU information
+
+# Time handling and scheduling
+python-dateutil>=2.8.2  # Extensions to the standard datetime module
+apscheduler>=3.10.0     # Advanced Python scheduler for periodic tasks
+
+# Logging and output formatting
+colorama>=0.4.6    # Cross-platform colored terminal output
+rich>=13.3.0       # Rich text and beautiful formatting in the terminal
+
+# Configuration handling
+pyyaml>=6.0        # YAML parser and emitter for configuration files
+python-dotenv>=1.0.0  # Environment variable management
+
+# Testing
+pytest>=7.3.0      # Unit testing framework
+pytest-cov>=4.1.0  # Coverage reporting for tests
+
+# Networking utilities
+netaddr>=0.8.0     # Network address manipulation
+netifaces>=0.11.0  # Network interface information
+
+# Command line interface
+click>=8.1.3       # Command line interface creation utility
+tqdm>=4.65.0       # Fast, extensible progress bar
+
+# Security
+cryptography>=40.0.0  # Cryptographic recipes and primitives
