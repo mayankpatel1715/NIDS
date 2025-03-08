@@ -1,4 +1,0 @@
-# Core dependencies
-scapy>=2.6.0         # For packet capture and analysis
-numpy>=1.26.4          # For numerical operations and statistics
-pandas>=2.2.2          # For data manipulation and analysis
