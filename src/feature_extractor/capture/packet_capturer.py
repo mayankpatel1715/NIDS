@@ -258,16 +258,30 @@ class PacketCapturer:
     
     def _packet_handler(self, packet: Packet) -> None:
         """
-        Process a captured packet: update statistics and call the user callback.
+        Process a captured packet.
+        
+        This method is called for each packet captured by the sniffer.
+        It updates statistics and calls the user-provided callback function.
         
         Args:
-            packet: The captured Scapy packet.
+            packet: The captured packet
         """
         try:
+            if not self.running:
+                return
+                
+            # Log packet information for debugging
+            self.logger.debug(f"Received packet: {packet.summary()}")
+            
             # Update statistics
             self.stats.update_from_packet(packet)
             
-            # Call user-provided callback
+            # Apply filter if specified
+            filter_str = self.config.get('filter', '')
+            if filter_str and not self._simple_filter_match(packet, filter_str):
+                return
+                
+            # Call user callback
             self.callback(packet)
                 
         except Exception as e:
@@ -275,45 +289,65 @@ class PacketCapturer:
     
     def _capture_from_interface(self) -> None:
         """
-        Capture packets from a network interface using Scapy's sniff function.
+        Capture packets from a network interface.
         
-        This method runs in a separate thread and can be stopped by setting
-        the stop_event.
+        This method is intended to be run in a separate thread.
+        It will continue capturing packets until stop_capture() is called
+        or an error occurs.
         """
         try:
-            # Extract configuration
-            interface = self.config['interface']
-            bpf_filter = self.config.get('filter', '')
-            count = self.config.get('count', 0)  # 0 means infinite
+            interface = self.config.get('interface')
+            filter_str = self.config.get('filter', '')
+            count = self.config.get('count', 0)
             timeout = self.config.get('timeout', None)
             
-            # Set up parameters for sniff
-            kwargs = {
-                'iface': interface,
-                'prn': self._packet_handler,
-                'store': False,  # Don't store packets in memory
-                'filter': bpf_filter if bpf_filter else None,
-                'count': count if count > 0 else None,
-                'timeout': timeout,
-                'stop_filter': lambda _: self._stop_event.is_set()
-            }
+            self.logger.info(f"Starting capture on interface {interface}")
+            if filter_str:
+                self.logger.info(f"Using filter: {filter_str}")
             
-            # Remove None values
-            kwargs = {k: v for k, v in kwargs.items() if v is not None}
+            # Ensure we're in promiscuous mode to capture all packets
+            conf.sniff_promisc = True
             
-            self.logger.info(f"Starting capture on {interface}" + 
-                           (f" with filter: {bpf_filter}" if bpf_filter else ""))
+            # Debug information
+            self.logger.debug(f"Available interfaces: {', '.join(get_if_list())}")
+            self.logger.debug(f"Using Scapy version: {conf.version}")
             
-            # Start sniffing
-            sniff(**kwargs)
+            # Check for root privileges
+            try:
+                import os
+                if os.name == 'posix' and os.geteuid() != 0:
+                    raise PacketCaptureError(
+                        "Root privileges required for packet capture. "
+                        "Please run with sudo."
+                    )
+            except AttributeError:
+                # Windows or other OS without geteuid
+                pass
             
-        except KeyboardInterrupt:
-            self.logger.info("Capture stopped by keyboard interrupt")
+            # Use a simpler approach for debugging
+            def stop_filter(pkt):
+                return self._stop_event.is_set()
+            
+            # Start packet capture with minimal options
+            self.logger.info("Starting sniff function...")
+            sniff(
+                iface=interface,
+                prn=self._packet_handler,
+                store=0,  # Don't store packets in memory
+                stop_filter=stop_filter
+            )
+            
+            self.logger.info("Packet capture completed")
+            
         except Exception as e:
             self.logger.error(f"Error during packet capture: {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())
         finally:
-            self.running = False
-            self.stats.end_time = time.time()
+            # Ensure we mark capture as stopped even if an error occurred
+            if self.running:
+                self.running = False
+                self.stats.end_time = time.time()
     
     def _capture_from_file(self) -> None:
         """

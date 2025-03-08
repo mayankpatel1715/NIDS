@@ -61,6 +61,24 @@ DEFAULT_CONFIG = {
 # Path to the config directory
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
 
+def check_root_privileges() -> bool:
+    """
+    Check if the script is running with root/administrator privileges.
+    
+    Returns:
+        bool: True if running with root privileges, False otherwise
+    """
+    try:
+        return os.geteuid() == 0
+    except AttributeError:
+        # Windows doesn't have geteuid, try a different approach
+        try:
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except:
+            # If we can't determine, assume we don't have privileges
+            return False
+
 def setup_logging(config: Dict[str, Any]) -> None:
     """
     Set up logging based on configuration.
@@ -325,6 +343,16 @@ def main() -> int:
     if args.output:
         config["features"]["save_path"] = args.output
     
+    # Check if we need root privileges (live capture mode)
+    if args.mode == "live" and "input_file" not in capture_config:
+        if not check_root_privileges():
+            logging.error(
+                "Root privileges required for live packet capture.\n"
+                "Please run the script with sudo (Linux/macOS) or as Administrator (Windows):\n"
+                f"sudo python {sys.argv[0]} {' '.join(sys.argv[1:])}"
+            )
+            return 1
+    
     # Validate capture configuration
     if args.mode == "live" and "interface" not in capture_config:
         # List available interfaces
@@ -341,6 +369,8 @@ def main() -> int:
     try:
         # Create packet capturer
         logging.info("Initializing packet capturer...")
+        logging.info(f"Capture configuration: {capture_config}")
+        
         capturer = PacketCapturer(capture_config, packet_callback)
         
         # Start statistics display thread
@@ -353,17 +383,26 @@ def main() -> int:
         logging.info(f"Starting packet capture in {args.mode} mode...")
         start_time = datetime.now()
         
+        # For live capture, we need to keep the main thread running
         capturer.start_capture()
         
         # Main loop - in practice, the capture runs in its own thread
         # so this loop just keeps the main thread alive until signaled to stop
         while running:
             time.sleep(0.1)
+            
+            # Check if capture is still running
+            if not capturer.is_running():
+                logging.error("Capture stopped unexpectedly")
+                running = False
+                break
         
     except KeyboardInterrupt:
         logging.info("Capture interrupted by user.")
     except Exception as e:
         logging.error(f"Error during capture: {str(e)}")
+        import traceback
+        logging.error(traceback.format_exc())
         return 1
     finally:
         # Clean up resources
@@ -371,11 +410,15 @@ def main() -> int:
         
         if capturer:
             try:
-                # Get final statistics
-                stats = capturer.get_stats()
-                logging.info(f"Capture completed. Final statistics:\n{stats}")
+                if capturer.is_running():
+                    # Get final statistics
+                    stats = capturer.get_stats()
+                    logging.info(f"Capture completed. Final statistics:\n{stats}")
+                    capturer.stop_capture()
+                else:
+                    logging.warning("Capture was not running during cleanup")
             except Exception as e:
-                logging.error(f"Error getting final statistics: {str(e)}")
+                logging.error(f"Error during cleanup: {str(e)}")
         
         # Wait for threads to finish
         if stats_thread and stats_thread.is_alive():
