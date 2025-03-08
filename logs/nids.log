@@ -1,0 +1,19 @@
+2025-03-09 02:39:10,890 - root - INFO - Logging initialized
+2025-03-09 02:39:10,891 - root - WARNING - No capture interface or input file specified in config
+2025-03-09 02:39:10,891 - root - INFO - Initializing packet capturer...
+2025-03-09 02:39:10,891 - root - INFO - Starting packet capture in live mode...
+2025-03-09 02:39:10,891 - packet_capturer - INFO - Starting capture on en0 with filter: tcp or udp
+2025-03-09 02:39:10,891 - packet_capturer - INFO - Started packet capture on interface en0
+2025-03-09 02:39:10,891 - packet_capturer - ERROR - Error during packet capture: Permission denied: could not open /dev/bpf0. Make sure to be running Scapy as root ! (sudo)
+2025-03-09 02:39:23,581 - root - INFO - Received SIGINT signal. Shutting down...
+2025-03-09 02:39:23,582 - root - INFO - Stopping packet capture...
+2025-03-09 02:39:23,582 - root - ERROR - Error during capture: Capture is not running
+2025-03-09 02:39:23,582 - root - INFO - Capture completed. Final statistics:
+Capture Statistics:
+  Duration: 0.00 seconds
+  Total Packets: 0
+  Total Bytes: 0
+  Avg Packets/sec: 0.00
+  Avg Bytes/sec: 0.00
+  Protocol Distribution:
+2025-03-09 02:39:24,584 - root - INFO - NIDS shutdown complete.

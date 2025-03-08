@@ -31,6 +31,11 @@ logging.basicConfig(
 logger = logging.getLogger('packet_capturer')
 
 
+class PacketCaptureError(Exception):
+    """Custom exception for packet capture related errors."""
+    pass
+
+
 @dataclass
 class CaptureStatistics:
     """Statistics collected during packet capture."""
@@ -138,7 +143,7 @@ class PacketCapturer:
                 The function should accept a Scapy packet object as its argument.
         
         Raises:
-            ValueError: If the configuration is invalid or missing required keys.
+            PacketCaptureError: If the configuration is invalid or missing required keys.
         """
         self.config = config
         self.callback = callback
@@ -158,23 +163,23 @@ class PacketCapturer:
         Validate the configuration dictionary.
         
         Raises:
-            ValueError: If the configuration is invalid or missing required keys.
+            PacketCaptureError: If the configuration is invalid or missing required keys.
         """
         if 'input_file' in self.config:
             # File capture mode
             input_file = Path(self.config['input_file'])
             if not input_file.exists():
-                raise ValueError(f"Input file does not exist: {input_file}")
+                raise PacketCaptureError(f"Input file does not exist: {input_file}")
         else:
             # Live capture mode
             if 'interface' not in self.config:
-                raise ValueError("Interface must be specified for live capture")
+                raise PacketCaptureError("Interface must be specified for live capture")
             
             interface = self.config['interface']
             available_interfaces = get_if_list()
             
             if interface not in available_interfaces:
-                raise ValueError(
+                raise PacketCaptureError(
                     f"Interface '{interface}' not found. Available interfaces: {', '.join(available_interfaces)}"
                 )
     
@@ -186,10 +191,10 @@ class PacketCapturer:
         For file capture, this processes the PCAP file synchronously.
         
         Raises:
-            RuntimeError: If capture is already running.
+            PacketCaptureError: If capture is already running or fails to start.
         """
         if self.running:
-            raise RuntimeError("Capture is already running")
+            raise PacketCaptureError("Capture is already running")
         
         self.running = True
         self.stats = CaptureStatistics()
@@ -214,10 +219,10 @@ class PacketCapturer:
             CaptureStatistics: Statistics about the captured packets.
         
         Raises:
-            RuntimeError: If capture is not running.
+            PacketCaptureError: If capture is not running.
         """
         if not self.running:
-            raise RuntimeError("Capture is not running")
+            raise PacketCaptureError("Capture is not running")
         
         self._stop_event.set()
         
