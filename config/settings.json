@@ -6,7 +6,7 @@
         "console": true
     },
     "capture": {
-        "interface": null,
+        "interface": "en0",
         "filter": "tcp or udp",
         "timeout": 0,
         "count": 0
