@@ -16,9 +16,12 @@ import ipaddress
 
 try:
     from scapy.all import Packet, IP, IPv6, TCP, UDP, ICMP, ICMPv6, ARP, Ether
+    from scapy.layers.inet6 import IPv6
     from scapy.layers.inet import ICMP as ICMPv4
 except ImportError:
     raise ImportError("Scapy is required for feature extraction. Install it using: pip install scapy")
+except Exception as e:
+    raise ImportError(f"Scapy import error: {str(e)}. Ensure you have Scapy 2.4.3+ installed.")
 
 # Configure logging
 logging.basicConfig(
