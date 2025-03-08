@@ -1,8 +1,17 @@
-# Virtual Environment
+# Virtual Environment - comprehensive exclusion
 venv/
 env/
 ENV/
 .env
+.venv/
+.virtualenv/
+virtualenv/
+*venv/
+*env/
+pythonenv*
+Python*/
+py*/
+.python-version
 
 # Python bytecode
 __pycache__/
@@ -29,12 +38,17 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Logs
+# Logs - comprehensive exclusion
 logs/
+log/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log.*
+nids.log*
+*.out
+*.err
 
 # IDE specific files
 .idea/
@@ -46,13 +60,26 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+*.sublime*
+.project
+.pydevproject
+.settings/
+.classpath
+.factorypath
 
 # Project specific
 *.pcap
 features.csv
 nids.log
 .ipynb_checkpoints/
+*.csv
+*.json.bak
+*.db
+*.sqlite
+*.sqlite3
 
 # Temporary files
 tmp/
 temp/
+.tmp/
+.temp/
