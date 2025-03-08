@@ -6,8 +6,8 @@ Main entry point for the NIDS application that connects packet capture
 and feature extraction modules.
 
 Usage:
-    python main.py -i eth0 -c config.json -m live
-    python main.py -f capture.pcap -c config.json -m offline
+    python main.py -i eth0 -c config/settings.json -m live
+    python main.py -f capture.pcap -c config/settings.json -m offline
 """
 
 import os
@@ -58,6 +58,9 @@ DEFAULT_CONFIG = {
     }
 }
 
+# Path to the config directory
+CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
+
 def setup_logging(config: Dict[str, Any]) -> None:
     """
     Set up logging based on configuration.
@@ -84,6 +87,12 @@ def setup_logging(config: Dict[str, Any]) -> None:
     
     # Add file handler if specified
     if log_file:
+        # If log_file is not an absolute path, place it in the logs directory
+        if not os.path.isabs(log_file):
+            logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+            os.makedirs(logs_dir, exist_ok=True)
+            log_file = os.path.join(logs_dir, log_file)
+            
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -107,6 +116,13 @@ def load_config(config_path: str) -> Dict[str, Any]:
         Configuration dictionary
     """
     try:
+        # If config_path is not an absolute path and doesn't exist,
+        # try looking in the config directory
+        if not os.path.isabs(config_path) and not os.path.exists(config_path):
+            config_dir_path = os.path.join(CONFIG_DIR, config_path)
+            if os.path.exists(config_dir_path):
+                config_path = config_dir_path
+        
         if not os.path.exists(config_path):
             logging.warning(f"Configuration file {config_path} not found. Using default configuration.")
             return DEFAULT_CONFIG
@@ -174,7 +190,8 @@ def parse_arguments() -> argparse.Namespace:
     capture_group.add_argument('-b', '--bpf-filter', type=str, help='BPF filter string')
     
     # General options
-    parser.add_argument('-c', '--config', type=str, default='settings.json', help='Path to configuration file')
+    parser.add_argument('-c', '--config', type=str, default='settings.json', 
+                        help='Path to configuration file (relative to config/ directory or absolute)')
     parser.add_argument('-m', '--mode', type=str, choices=['live', 'offline'], default='live', 
                         help='Operation mode: live (capture) or offline (read from file)')
     parser.add_argument('-o', '--output', type=str, help='Output file for extracted features')
